@@ -1,7 +1,9 @@
+import 'package:donor/services/userservice.dart';
 import 'package:donor/views/homescreen.dart';
 import 'package:donor/views/loginscreen.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+// import 'package:shared_preferences/shared_preferences.dart';
 
 class Splashscreen extends StatefulWidget {
   const Splashscreen({super.key});
@@ -11,6 +13,8 @@ class Splashscreen extends StatefulWidget {
 }
 
 class _SplashscreenState extends State<Splashscreen> {
+  UserService userservice = UserService();
+
   @override
   void initState() {
     super.initState();
@@ -18,9 +22,10 @@ class _SplashscreenState extends State<Splashscreen> {
   }
 
   Future<void> checklogin() async {
-    final pref = await SharedPreferences.getInstance();
+    // final pref = await SharedPreferences.getInstance();
     Future.delayed(Duration(seconds: 3), () async {
-      if (pref.getString("email") != null) {
+      // if (pref.getString("email") != null) {
+      if (await userservice.islogin() == true) {
         Navigator.pushReplacement(
           // ignore: use_build_context_synchronously
           context,

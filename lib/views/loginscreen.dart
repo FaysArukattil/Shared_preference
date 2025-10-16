@@ -1,6 +1,7 @@
+import 'package:donor/services/userservice.dart';
 import 'package:donor/views/homescreen.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 
 class Loginscreen extends StatefulWidget {
   const Loginscreen({super.key});
@@ -10,6 +11,7 @@ class Loginscreen extends StatefulWidget {
 }
 
 class _LoginscreenState extends State<Loginscreen> {
+  UserService userservice = UserService();
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -20,9 +22,10 @@ class _LoginscreenState extends State<Loginscreen> {
     if (_formKey.currentState!.validate()) {
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
-      final pref = await SharedPreferences.getInstance();
-      pref.setString("email", email);
-      pref.setString("pass", password);
+      // final pref = await SharedPreferences.getInstance();
+      // pref.setString("email", email);
+      // pref.setString("pass", password);
+      await userservice.saveusercredentials(email: email, pass: password);
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
