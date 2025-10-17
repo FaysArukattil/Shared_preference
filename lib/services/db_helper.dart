@@ -37,6 +37,16 @@ class DatabaseHelper {
     return await database.delete("STUDENT", where: "ID=?", whereArgs: [id]);
   }
 
+  Future<int> editUser(int id, Map<String, dynamic> updatedData) async {
+    await initdb();
+    return await database.update(
+      "STUDENT",
+      updatedData,
+      where: "ID = ?",
+      whereArgs: [id],
+    );
+  }
+
   Future<List<Map<String, dynamic>>> getall() async {
     await initdb();
     return await database.query("STUDENT");
