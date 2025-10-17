@@ -1,4 +1,6 @@
+import 'package:donor/services/db_helper.dart';
 import 'package:donor/services/userservice.dart';
+import 'package:donor/views/adduser.dart';
 import 'package:donor/views/loginscreen.dart';
 import 'package:flutter/material.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
@@ -11,6 +13,7 @@ class Homescreen extends StatefulWidget {
 }
 
 class _HomescreenState extends State<Homescreen> {
+  DatabaseHelper dbhelper = DatabaseHelper();
   UserService userservice = UserService();
   String email = "";
   @override
@@ -36,6 +39,13 @@ class _HomescreenState extends State<Homescreen> {
         ).showSnackBar(SnackBar(content: Text("Logout please")));
       },
       child: Scaffold(
+        floatingActionButton: FloatingActionButton(
+          child: Icon(Icons.add),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AddUser()),
+          ),
+        ),
         appBar: AppBar(
           backgroundColor: Colors.redAccent,
           foregroundColor: Colors.black,
@@ -57,7 +67,56 @@ class _HomescreenState extends State<Homescreen> {
             ),
           ],
         ),
-        body: Column(),
+        body: FutureBuilder(
+          future: dbhelper.getall(),
+          builder:
+              (
+                BuildContext context,
+                AsyncSnapshot<List<Map<String, dynamic>>> snapshot,
+              ) {
+                if (snapshot.hasData) {
+                  if (snapshot.data!.isEmpty) {
+                    return Center(child: Text("No Data"));
+                  } else {
+                    return ListView.builder(
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (context, index) {
+                        var user = snapshot.data![index];
+                        return ListTile(
+                          leading: CircleAvatar(child: Text("${user["ID"]}")),
+                          title: Text("${user["NAME"]}"),
+                          subtitle: Text("${user["PHONE"]}"),
+                          trailing: IconButton(
+                            onPressed: () async {
+                              await dbhelper.deleteUser(user["ID"]).then((
+                                value,
+                              ) {
+                                // ignore: use_build_context_synchronously
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    behavior: SnackBarBehavior.floating,
+                                    content: Text("Deleted Succesfully"),
+                                  ),
+                                );
+                                setState(() {});
+                              });
+                              {
+                                setState(() {});
+                              }
+                            },
+                            icon: Icon(Icons.delete),
+                          ),
+                        );
+                      },
+                    );
+                  }
+                } else if (snapshot.hasError) {
+                  return Center(child: Text("Error:${snapshot.error}"));
+                } else {
+                  return Center(child: CircularProgressIndicator());
+                }
+              },
+        ),
       ),
     );
   }

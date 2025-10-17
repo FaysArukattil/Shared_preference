@@ -32,13 +32,9 @@ class DatabaseHelper {
     );
   }
 
-  Future<int> deleteUser(User user) async {
+  Future<int> deleteUser(int id) async {
     await initdb();
-    return await database.delete(
-      "STUDENT",
-      where: "ID=?",
-      whereArgs: [user.ID],
-    );
+    return await database.delete("STUDENT", where: "ID=?", whereArgs: [id]);
   }
 
   Future<List<Map<String, dynamic>>> getall() async {
