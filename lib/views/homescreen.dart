@@ -1,9 +1,9 @@
+import 'package:donor/models/user.dart';
 import 'package:donor/services/db_helper.dart';
 import 'package:donor/services/userservice.dart';
 import 'package:donor/views/adduser.dart';
 import 'package:donor/views/loginscreen.dart';
 import 'package:flutter/material.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
 
 class Homescreen extends StatefulWidget {
   const Homescreen({super.key});
@@ -13,19 +13,24 @@ class Homescreen extends StatefulWidget {
 }
 
 class _HomescreenState extends State<Homescreen> {
+  final _formKey = GlobalKey<FormState>();
+  final nameController = TextEditingController();
+  final ageController = TextEditingController();
+  final phoneController = TextEditingController();
+  final emailController = TextEditingController();
+
   DatabaseHelper dbhelper = DatabaseHelper();
   UserService userservice = UserService();
   String email = "";
+
   @override
   void initState() {
-    getdata();
     super.initState();
+    getdata();
   }
 
   Future<void> getdata() async {
-    // final pref = await SharedPreferences.getInstance();
-    // email = pref.getString("email") ?? "Not available";
-    userservice.getemail;
+    email = (await userservice.getemail())!; // ✅ properly called
     setState(() {});
   }
 
@@ -36,14 +41,14 @@ class _HomescreenState extends State<Homescreen> {
       onPopInvokedWithResult: (didPop, result) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text("Logout please")));
+        ).showSnackBar(const SnackBar(content: Text("Logout please")));
       },
       child: Scaffold(
         floatingActionButton: FloatingActionButton(
-          child: Icon(Icons.add),
+          child: const Icon(Icons.add),
           onPressed: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => AddUser()),
+            MaterialPageRoute(builder: (context) => const AddUser()),
           ),
         ),
         appBar: AppBar(
@@ -53,15 +58,13 @@ class _HomescreenState extends State<Homescreen> {
           centerTitle: true,
           actions: [
             IconButton(
-              icon: Icon(Icons.power_settings_new_rounded),
+              icon: const Icon(Icons.power_settings_new_rounded),
               onPressed: () async {
-                // final pref = await SharedPreferences.getInstance();
-                // pref.clear();
                 userservice.logout();
+                // ignore: use_build_context_synchronously
                 Navigator.pushReplacement(
-                  // ignore: use_build_context_synchronously
                   context,
-                  MaterialPageRoute(builder: (context) => Loginscreen()),
+                  MaterialPageRoute(builder: (context) => const Loginscreen()),
                 );
               },
             ),
@@ -69,190 +72,194 @@ class _HomescreenState extends State<Homescreen> {
         ),
         body: FutureBuilder(
           future: dbhelper.getall(),
-          builder:
-              (
-                BuildContext context,
-                AsyncSnapshot<List<Map<String, dynamic>>> snapshot,
-              ) {
-                if (snapshot.hasData) {
-                  if (snapshot.data!.isEmpty) {
-                    return Center(child: Text("No Data"));
-                  } else {
-                    return ListView.builder(
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (context, index) {
-                        var user = snapshot.data![index];
-                        return ListTile(
-                          leading: CircleAvatar(child: Text("${user["ID"]}")),
-                          title: Text("${user["NAME"]}"),
-                          subtitle: Text("${user["PHONE"]}"),
-                          trailing: SizedBox(
-                            width: 100,
-                            child: Row(
-                              children: [
-                                IconButton(
-                                  onPressed: () async {
-                                    final nameController =
-                                        TextEditingController(
-                                          text: user["NAME"],
-                                        );
-                                    final ageController = TextEditingController(
-                                      text: user["AGE"].toString(),
-                                    );
-                                    final phoneController =
-                                        TextEditingController(
-                                          text: user["PHONE"],
-                                        );
-                                    final emailController =
-                                        TextEditingController(
-                                          text: user["EMAIL"],
-                                        );
+          builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+            if (snapshot.hasData) {
+              if (snapshot.data!.isEmpty) {
+                return const Center(child: Text("No Data"));
+              } else {
+                return ListView.builder(
+                  itemCount: snapshot.data!.length,
+                  itemBuilder: (context, index) {
+                    var user = snapshot.data![index];
+                    return ListTile(
+                      leading: CircleAvatar(child: Text("${user["ID"]}")),
+                      title: Text("${user["NAME"]}"),
+                      subtitle: Text("${user["PHONE"]}"),
+                      trailing: SizedBox(
+                        width: 100,
+                        child: Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () async {
+                                // ✅ Fill controllers with existing values
+                                nameController.text = user["NAME"];
+                                ageController.text = user["AGE"].toString();
+                                phoneController.text = user["PHONE"];
+                                emailController.text = user["EMAIL"];
 
-                                    // Show dialog
-                                    await showDialog(
-                                      context: context,
-                                      builder: (context) {
-                                        return AlertDialog(
-                                          title: Text("Edit User"),
-                                          content: SingleChildScrollView(
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                TextField(
-                                                  controller: nameController,
-                                                  decoration: InputDecoration(
-                                                    labelText: "Name",
-                                                  ),
-                                                ),
-                                                SizedBox(height: 8),
-                                                TextField(
-                                                  controller: ageController,
-                                                  keyboardType:
-                                                      TextInputType.number,
-                                                  decoration: InputDecoration(
-                                                    labelText: "Age",
-                                                  ),
-                                                ),
-                                                SizedBox(height: 8),
-                                                TextField(
-                                                  controller: phoneController,
-                                                  keyboardType:
-                                                      TextInputType.phone,
-                                                  decoration: InputDecoration(
-                                                    labelText: "Phone",
-                                                  ),
-                                                ),
-                                                SizedBox(height: 8),
-                                                TextField(
-                                                  controller: emailController,
-                                                  keyboardType: TextInputType
-                                                      .emailAddress,
-                                                  decoration: InputDecoration(
-                                                    labelText: "Email",
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () =>
-                                                  Navigator.pop(context),
-                                              child: const Text("Cancel"),
-                                            ),
-                                            ElevatedButton(
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor:
-                                                    Colors.redAccent,
-                                              ),
-                                              onPressed: () async {
-                                                // Prepare updated data
-                                                final updatedData = {
-                                                  "NAME": nameController.text
-                                                      .trim(),
-                                                  "AGE":
-                                                      int.tryParse(
-                                                        ageController.text
-                                                            .trim(),
-                                                      ) ??
-                                                      user["AGE"],
-                                                  "PHONE": phoneController.text
-                                                      .trim(),
-                                                  "EMAIL": emailController.text
-                                                      .trim(),
-                                                };
-
-                                                // Update in database
-                                                await dbhelper.editUser(
-                                                  user["ID"],
-                                                  updatedData,
-                                                );
-
-                                                // Show snackbar
-                                                ScaffoldMessenger.of(
-                                                  // ignore: use_build_context_synchronously
-                                                  context,
-                                                ).showSnackBar(
-                                                  const SnackBar(
-                                                    behavior: SnackBarBehavior
-                                                        .floating,
-                                                    content: Text(
-                                                      "User Updated Successfully",
+                                await showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      title: const Text("Edit User"),
+                                      content: SingleChildScrollView(
+                                        child: Form(
+                                          key: _formKey,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              TextFormField(
+                                                controller: nameController,
+                                                decoration:
+                                                    const InputDecoration(
+                                                      labelText: "Name",
                                                     ),
-                                                  ),
-                                                );
+                                                validator: (v) {
+                                                  return (v == null ||
+                                                          v.trim().isEmpty)
+                                                      ? "Must fill"
+                                                      : null;
+                                                },
+                                              ),
+                                              const SizedBox(height: 8),
+                                              TextFormField(
+                                                controller: ageController,
+                                                keyboardType:
+                                                    TextInputType.number,
+                                                decoration:
+                                                    const InputDecoration(
+                                                      labelText: "Age",
+                                                    ),
+                                                validator: (v) {
+                                                  return (v == null ||
+                                                          v.trim().isEmpty)
+                                                      ? "Must fill"
+                                                      : null;
+                                                },
+                                              ),
+                                              const SizedBox(height: 8),
+                                              TextFormField(
+                                                controller: phoneController,
+                                                keyboardType:
+                                                    TextInputType.phone,
+                                                decoration:
+                                                    const InputDecoration(
+                                                      labelText: "Phone",
+                                                    ),
+                                                validator: (v) {
+                                                  return (v == null ||
+                                                          v.trim().isEmpty)
+                                                      ? "Must fill"
+                                                      : null;
+                                                },
+                                              ),
+                                              const SizedBox(height: 8),
+                                              TextFormField(
+                                                controller: emailController,
+                                                keyboardType:
+                                                    TextInputType.emailAddress,
+                                                decoration:
+                                                    const InputDecoration(
+                                                      labelText: "Email",
+                                                    ),
+                                                validator: (v) {
+                                                  return (v == null ||
+                                                          v.trim().isEmpty)
+                                                      ? "Must fill"
+                                                      : null;
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context),
+                                          child: const Text("Cancel"),
+                                        ),
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.redAccent,
+                                          ),
+                                          onPressed: () async {
+                                            if (_formKey.currentState!
+                                                .validate()) {
+                                              // ✅ Create a User object and update directly
+                                              User updatedUser = User(
+                                                ID: user["ID"],
+                                                NAME: nameController.text
+                                                    .trim(),
+                                                AGE: int.parse(
+                                                  ageController.text.trim(),
+                                                ),
+                                                PHONE: phoneController.text
+                                                    .trim(),
+                                                EMAIL: emailController.text
+                                                    .trim(),
+                                              );
 
-                                                Navigator.pop(
-                                                  // ignore: use_build_context_synchronously
-                                                  context,
-                                                ); // Close dialog
-                                                setState(() {}); // Refresh list
-                                              },
-                                              child: const Text("Save"),
-                                            ),
-                                          ],
-                                        );
-                                      },
+                                              await dbhelper.editUser(
+                                                updatedUser.ID!,
+                                                updatedUser.tomap(),
+                                              );
+
+                                              // ignore: use_build_context_synchronously
+                                              ScaffoldMessenger.of(
+                                                // ignore: use_build_context_synchronously
+                                                context,
+                                              ).showSnackBar(
+                                                const SnackBar(
+                                                  behavior:
+                                                      SnackBarBehavior.floating,
+                                                  content: Text(
+                                                    "User Updated Successfully",
+                                                  ),
+                                                ),
+                                              );
+
+                                              // ignore: use_build_context_synchronously
+                                              Navigator.pop(context);
+                                              setState(() {});
+                                            }
+                                          },
+                                          child: const Text("Save"),
+                                        ),
+                                      ],
                                     );
                                   },
-                                  icon: Icon(Icons.edit),
-                                ),
-                                IconButton(
-                                  onPressed: () async {
-                                    await dbhelper.deleteUser(user["ID"]).then((
-                                      value,
-                                    ) {
-                                      // ignore: use_build_context_synchronously
-                                      ScaffoldMessenger.of(
-                                        // ignore: use_build_context_synchronously
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          behavior: SnackBarBehavior.floating,
-                                          content: Text("Deleted Succesfully"),
-                                        ),
-                                      );
-                                      setState(() {});
-                                    });
-                                    {
-                                      setState(() {});
-                                    }
-                                  },
-                                  icon: Icon(Icons.delete),
-                                ),
-                              ],
+                                );
+                              },
                             ),
-                          ),
-                        );
-                      },
+                            IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () async {
+                                await dbhelper.deleteUser(user["ID"]);
+                                // ignore: use_build_context_synchronously
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    behavior: SnackBarBehavior.floating,
+                                    content: Text("Deleted Successfully"),
+                                  ),
+                                );
+                                setState(() {});
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
                     );
-                  }
-                } else if (snapshot.hasError) {
-                  return Center(child: Text("Error:${snapshot.error}"));
-                } else {
-                  return Center(child: CircularProgressIndicator());
-                }
-              },
+                  },
+                );
+              }
+            } else if (snapshot.hasError) {
+              return Center(child: Text("Error: ${snapshot.error}"));
+            } else {
+              return const Center(child: CircularProgressIndicator());
+            }
+          },
         ),
       ),
     );
